@@ -3,13 +3,15 @@ import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TSSLTransportFactory;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
-import org.apache.thrift.transport.TException;
+import org.apache.thrift.transport.TTransportException;
+
+import java.net.*;
 
 
 public class Server{
 
 	public static FileStoreHandler fileHandler;
-	public static FileStore.Processor fileProcessor;
+	public static FileStore.Processor<FileStore.Iface> processor;
 	public static int port;
 	public static String ip;
 
@@ -17,7 +19,9 @@ public class Server{
 
 		try {
 			port = Integer.parseInt(args[0]);
-			processor = new FileStore.Processor<FileStore.Iface>(/*handler*/);
+			ip = InetAddress.getLocalHost().getHostAddress();
+			fileHandler = new FileStoreHandler(ip, port);
+			processor = new FileStore.Processor<FileStore.Iface>(fileHandler);
 			Runnable simple = new Runnable() {
 				public void run() {
 					startServer(processor);
