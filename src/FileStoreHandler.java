@@ -106,20 +106,30 @@ public class FileStoreHandler implements FileStore.Iface{
 			if(nodeSucc.getId().compareTo(node.getId()) == 0)
 				return getNodeSucc();
 			else{
-				if(nodeSucc!= null) 
-					nodeSucc = sendrpc(nodeSucc, key, "getNodeSucc");
+				if(nodeSucc!= null){
+					try{
+						TTransport socket = new TSocket(nodeSucc.getIp(), nodeSucc.getPort());
+						socket.open();
+
+						TProtocol protocol = new TBinaryProtocol(socket);
+						FileStore.Client client = new FileStore.Client(protocol);
+						nodeSucc = client.getNodeSucc();
+						socket.close();
+
+					}
+					catch(TException te){
+						System.err.println("Exception occured in rpc : " + te.getMessage());
+						System.exit(0);
+					}	
 			}
 		}
 		return nodeSucc;
+		}
 	}
 
 	public NodeID findPred(String key) throws TException {
-
-		//if(key.compareTo(node.getId())==0)
-		//	return node;
-		//else{
-		NodeID next = null;
-		next = getNodeSucc();
+		
+		NodeID next  = getNodeSucc();
 		NodeID pred = null;
 		if(isClosest(key, node.getId(), next.getId()) != null)
 			return node;
@@ -127,17 +137,16 @@ public class FileStoreHandler implements FileStore.Iface{
 			for (int i = fingertable.size() - 1; i > 0; i--){
 				//next = fingertable.get(i);
 				if(isClosest(fingertable.get(i).getId(), node.getId(), key)!=null)
-					return sendrpc(next, key, "findPred");
+					return sendrpc(next, key);
 			}
 		else{
 			SystemException se = new SystemException();
 			se.setMessage("Pred does not exist");
 			throw se;
 		}
-		NodeID n = null;
-		return n;
-		//}
+		return node;
 	}
+
 	public NodeID getNodeSucc() throws TException {
 		NodeID succnode;
 		if(fingertable.size() > 0){
@@ -180,7 +189,7 @@ public class FileStoreHandler implements FileStore.Iface{
 		return hexString.toString();
 	}	
 	
-	public NodeID sendrpc (NodeID cnode, String key, String method){
+	public NodeID sendrpc (NodeID cnode, String key){
 		NodeID temp_node = null;
 		try{
 			/**
@@ -196,13 +205,11 @@ public class FileStoreHandler implements FileStore.Iface{
 			 */
 			TProtocol protocol = new TBinaryProtocol(socket);
 			FileStore.Client client = new FileStore.Client(protocol);
-			if(method.equals("findPred"))
-				return client.findPred(key);
-			else if(method.equals("getNodeSucc"))
-				return client.getNodeSucc();
+			temp_node = client.findPred(key);
+			socket.close();
 		}
 		catch(TException te){
-			System.err.println("Exception occured in rpc : " + te.getMessage());
+			System.err.println("Exception occured in sending rpc : " + te.getMessage());
 			System.exit(0);
 		}
 		return temp_node;
