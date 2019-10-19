@@ -3,7 +3,9 @@ LIB_PATH=/home/yaoliu/src_code/local/lib/usr/local/lib/libthrift-0.12.0.jar:/hom
 all: clean
 	mkdir bin
 	mkdir bin/server_classes
+	mkdir bin/client_classes
 	javac -classpath $(LIB_PATH) -d bin/server_classes/ src/Server.java src/FileStoreHandler.java gen-java/*
+	javac -classpath $(LIB_PATH) -d bin/client_classes/ src/Client.java src/FileStoreHandler.java gen-java/*
 
 clean:
 	rm -rf bin/
