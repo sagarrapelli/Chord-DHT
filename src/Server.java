@@ -39,7 +39,7 @@ public class Server{
 			TServerTransport serverTransport = new TServerSocket(port);
 			TServer server = new TThreadPoolServer(new TThreadPoolServer.Args(serverTransport).processor(processor));
 
-			System.out.println("Starting the  server...");
+			System.out.println("Starting the  server at " +ip+ ":" +port );
 			server.serve();
 		} catch (Exception e) {
 			e.printStackTrace();
